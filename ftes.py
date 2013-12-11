@@ -7,8 +7,24 @@
 # # Final Project Demo
 # # Facebook Topics Extraction System
 
-# <codecell>
+# <markdowncell>
 
+# ## Project Goals:
+# 
+# * Identify popular topics in a given facebook page
+# * Find similar posts related to a user's interest, and compare the results with facebook's
+
+# <markdowncell>
+
+# ## Motivation
+# 
+# * FB Search seems to be missing some results
+# * See how well a simple TFIDF model would perform against FB Search
+# * Finally... find out some popular topics being discussed without reading thru every post
+
+# <markdowncell>
+
+# ![](files/img/fb_search_1.png)
 
 # <markdowncell>
 
@@ -133,7 +149,7 @@ def correct(word, max_dist=2):
 
 # <markdowncell>
 
-# ### Some tiny examples
+# ### Some tiny examples for error correction
 
 # <codecell>
 
@@ -166,9 +182,13 @@ g = facebook.GraphAPI(ACCESS_TOKEN)
 
 # <codecell>
 
+# Only needs to make connection once
 cal_cs_id = '266736903421190'
 cal_cs_feed = g.get_connections(cal_cs_id, 'feed', limit=SEARCH_LIMIT)['data']
-pp(cal_cs_feed[0])
+
+# <codecell>
+
+pp(cal_cs_feed[15])
 
 # <codecell>
 
@@ -194,7 +214,7 @@ def print_feed(feed):
                         print '+', comment
         print '-----------------------------------------\n'
         
-print_feed(cal_cs_feed[10:13])
+print_feed(cal_cs_feed[10:12])
 
 # <codecell>
 
@@ -435,6 +455,25 @@ create_cloud(c)
 
 # ![](files/img/cloud_large.png)
 
-# <codecell>
+# <markdowncell>
 
+# # Results:
+# 
+# Part I:
+# 
+# * Tried out at least 5 different queries with the simple TFIDF search, and the result seems to be on par with FB Search. The ranking, as seen above, is different, however.      
+# 
+# * Revisit and try out different algorithms, including stemming, typo correction, variants of TFIDF (maxmimum TF normalization, sublinear scaling, etc.) http://nlp.stanford.edu/IR-book/html/htmledition/variant-tf-idf-functions-1.html
+# 
+# Part II:
+# 
+# * There are quite some noises ('http', 'www', etc.) and words that don't really tell you anything new ('class', 'course', etc.)    
+# 
+# * The overall result seems consistent with what most CS students usually discuss on FB ('telebears', '61B', etc.)
+# 
+# Overall a great project to work on and extend in the future!
+
+# <markdowncell>
+
+# # Thanks!
 
