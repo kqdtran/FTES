@@ -8,7 +8,7 @@
 
 # <codecell>
 
-ACCESS_TOKEN = 'CAACEdEose0cBANbufuqn7hIhZCtTnmdeLlhLRaNz02JbCoA5f3i9TxpaCjBRktyqgkQwpSuO7nTJC3UXtj3YDrh7WFLp0ELEZAM6rgV1mQFp8ytzdsiTk4ZB0LE9NwohpPu9hgBvjfkR5h7He13GZBSzA92LtRcKplMx56NQP7uLu7evbsw7EIUZACi9OnRDtSOQNlzIjzQZDZD'
+ACCESS_TOKEN = 'CAACEdEose0cBAMkOPptLZCUoAlRsUfD5nOnLcDo32ce6KZBKCxhOJ6E4YBjrQAFAxmoWmIdyd8AWl1TJoghswmnUKrTixUB5Toil9FsyfTy8YLjCfq292flRfYIJML0nzf3QwpR5nOnOGXLfntTlvriHnrXZBRQUChXMv3NPNbPTdeoKdgxDuXt7QCpfhVO8GCUXcNZAggZDZD'
 
 # <markdowncell>
 
@@ -17,6 +17,8 @@ ACCESS_TOKEN = 'CAACEdEose0cBANbufuqn7hIhZCtTnmdeLlhLRaNz02JbCoA5f3i9TxpaCjBRkty
 # <codecell>
 
 import facebook  # pip install facebook-sdk, not facebook
+import os
+import random
 
 # Plotting
 import numpy as np
@@ -34,6 +36,9 @@ import string
 import nltk
 from nltk.corpus import stopwords
 import tagger as tag
+import enchant
+from nltk.metrics import edit_distance
+from pattern.vector import Document, Model, TFIDF, LEMMA
 
 # <markdowncell>
 
@@ -60,6 +65,9 @@ chunker = nltk.RegexpParser(grammar)
 # POS tagger
 tagger = tag.tagger()
 
+# Spelling corrector
+spell_dict = enchant.Dict('en')
+
 # <markdowncell>
 
 # ## Helper functions for pretty printing, converting text to ascii, etc.
@@ -79,11 +87,15 @@ def to_ascii(unicode_text):
     return unicode_text.encode('ascii', 'ignore').\
             replace('\n', ' ').replace('\r', '').strip()
     
-def stripPunctuation(s):
+def strip(s, punc=False):
     '''
-    Strips punctuation from a string
+    Strips punctuation and whitespace from a string
     '''
-    return s.translate(table, string.punctuation)
+    if punc:
+        stripped = s.strip().translate(table, string.punctuation)
+        return ' '.join(stripped.split())
+    else:
+        return ' '.join(s.strip().split())
     
 def tokenize(s):
     '''
@@ -109,6 +121,38 @@ def stem(word):
     '''
     return stemmer.stem_word(word)
 
+def correct(word, max_dist=2):
+    '''
+    Corrects spelling of a word. If the word is already correct,  cannot be corrected at all,
+    or the edit distance is greater than 2, just returns the input word
+    
+    If it can be corrected, finds a list of suggestions and 
+    returns the first result whose edit distance doesn't exceed a threshold
+    
+    Edit distance: https://en.wikipedia.org/wiki/Edit_distance
+    '''
+    if spell_dict.check(word):
+        return word
+    
+    suggestions = spell_dict.suggest(word)
+    if suggestions and edit_distance(word, suggestions[0]) <= max_dist:
+        return suggestions[0]
+    return word
+
+# <markdowncell>
+
+# ### Some tiny examples
+
+# <codecell>
+
+# Works
+print correct('aninal')
+print correct('behols'), '\n'
+
+# Doesn't work... very well
+print correct('aisplane') # airplane
+print correct('facebook') # don't separate them...
+
 # <codecell>
 
 # Creates a connection to the Graph API with your access token
@@ -123,12 +167,6 @@ req
 
 my_feed = sj.loads(req.content)['data']
 print len(my_feed)
-
-# <markdowncell>
-
-# ## Seriously, Facebook?
-# 
-# ![Facebook search is so easy to see!](files/img/fb_search_1.png)
 
 # <markdowncell>
 
@@ -147,11 +185,11 @@ print len(my_feed)
 SEARCH_LIMIT = 500  # facebook allows 500 max
 cal_cs_id = '266736903421190'
 cal_cs_feed = g.get_connections(cal_cs_id, 'feed', limit=SEARCH_LIMIT)['data']
-pp(cal_cs_feed)
+pp(cal_cs_feed[0:5])
 
 # <codecell>
 
-len(cal_cs_feed)
+cal_cs_feed[0]
 
 # <codecell>
 
@@ -160,35 +198,130 @@ def print_feed(feed):
     Prints out every post, along with its comments, in a feed
     '''
     for post in feed:
-        msg = post['message'].encode('ascii', 'ignore').\
-            replace('\n', ' ').replace('\r', '').strip()
-        print 'POST:', msg, '\n'
-        print 'COMMENTS:'
+        if 'message' in post:
+            msg = strip(to_ascii(post['message']))
+            print 'POST:', msg, '\n'
         
+        print 'COMMENTS:'
         if 'comments' in post:
             for comment in post['comments']['data']:
-                comment = comment['message'].encode('ascii', 'ignore').\
-                    replace('\n', ' ').replace('\r', '').strip()
-                if comment is not None and comment != '':
-                    print '+', comment
+                if 'message' in comment:
+                    comment = strip(to_ascii(comment['message']))
+                    if comment is not None and comment != '':
+                        print '+', comment
         print '-----------------------------------------\n'
         
-print_feed(cal_cs_feed[:5])
+print_feed(cal_cs_feed[:3])
 
 # <codecell>
 
+def find_link(post):
+    '''
+    Finds the permanent link to a given post
+    '''
+    if 'actions' in post:
+        actions = post['actions']
+        for action in actions:
+            if 'link' in action:
+                return action['link']
+    return ''
+    
 def save_feed(feed):
     '''
-    Saves the feed as a Python cPickle file for later processing
+    Saves the input feed in a Python list for later processing
+    Also strips whitespace and lemmatizes along the way
     '''
     posts = []
     for post in feed:
-        msg = post['message']
-        posts.append(msg)
+        if 'message' in post and 'actions' in post:
+            msg = strip(to_ascii(post['message']))
+            link = strip(to_ascii(find_link(post)))
+            posts.append((msg, link))
         
         if 'comments' in post:
             for comment in post['comments']['data']:
-                comment = comment['message'].encode('ascii', 'ignore').\
-                    replace('\n', ' ').replace('\r', '').strip()
-                posts.append(comment)
+                if 'message' in comment and 'actions' in comment:
+                    msg = strip(to_ascii(comment['message']))
+                    link = strip(to_ascii(find_link(comment)))
+                    if msg is not None and msg != '':
+                        posts.append((msg, link))
+    return posts
+                
+feed = save_feed(cal_cs_feed)
+feed[:3]
+
+# <codecell>
+
+def bag_of_words_tfidf(lst):
+    '''
+    Constructs a bag of words model, where each document is a Facebook post/comment
+    Also applies TFIDF weighting, lemmatization, and filter out stopwords
+    '''
+    model = Model(documents=[], weight=TFIDF)
+    for msg, link in lst:
+        doc = Document(msg, stemmer=LEMMA, stopwords=True, name=msg, description=link)
+        model.append(doc)
+    return model
+
+def cosine_similarity(model, term, num=10):
+    '''
+    Finds the cosine similarity between the input document and each document in 
+    the corpus, and outputs the best 'num' results
+    '''
+    doc = Document(term, stemmer=LEMMA, stopwords=True, name=term)
+    return model.neighbors(doc, top=num)
+
+def process_similarity(result):
+    '''
+    Processes the result in a nicely formatted table
+    
+    result is a tuple of length 2, where the first item is the similarity score, 
+    and the second item is the document itself
+    '''
+    from prettytable import PrettyTable
+    
+    pt = PrettyTable(field_names=['Post', 'Sim', 'Link'])
+    pt.align['Post'], pt.align['Sim'], pt.align['Link'] = 'l', 'l', 'l'
+    [ pt.add_row([res[1].name[:45] + '...', "{0:.2f}".format(res[0]), 
+                  res[1].description]) for res in result ]
+    return pt
+
+# <codecell>
+
+# Constructs the bag of words model.
+# We don't need to call this function more than once, unless the corpus changed
+bag_of_words = bag_of_words_tfidf(feed)
+
+# <markdowncell>
+
+# # Enter your query below, along with the number of results you want to search for
+
+# <codecell>
+
+QUERY = 'declaring major early'
+NUM_SEARCH = 10
+
+# <codecell>
+
+sim = cosine_similarity(bag_of_words, QUERY, NUM_SEARCH)
+print process_similarity(sim)
+
+# <markdowncell>
+
+# ## compares with
+
+# <markdowncell>
+
+# ![FB Search result](files/img/fb_search_1.png)
+
+# <markdowncell>
+
+# **, which I think is not bad at all. The top result from this search system is:**    
+# ![My searcht](files/img/fb_search_2.png)
+# 
+# , **whereas the top result for FB search is:**    
+# ![FB Search](files/img/fb_search_3.png)
+
+# <codecell>
+
 
