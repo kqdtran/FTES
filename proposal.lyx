@@ -1,0 +1,474 @@
+#LyX 2.0 created this file. For more info see http://www.lyx.org/
+\lyxformat 413
+\begin_document
+\begin_header
+\textclass article
+\begin_preamble
+
+\usepackage{listings}
+\PassOptionsToPackage{normalem}{ulem}
+\usepackage{ulem}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% User specified LaTeX commands.
+% Search for all the places that say "PUT SOMETHING HERE".
+
+
+\usepackage{listings}\usepackage{url}\usepackage{parskip}
+
+\def\Name{Khoa Tran}  % Your name
+
+\title{INFO 256 Fall 2013 --- Final Project Proposal}
+\author{\Name}
+\end_preamble
+\use_default_options false
+\maintain_unincluded_children false
+\language english
+\language_package none
+\inputencoding latin9
+\fontencoding default
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize 11
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry true
+\use_amsmath 2
+\use_esint 1
+\use_mhchem 0
+\use_mathdots 0
+\cite_engine basic
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\use_refstyle 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Standard
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+maketitle
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Idea
+\end_layout
+
+\begin_layout Standard
+A Facebook Topics Extraction and Similarity system, which would allow users
+ to identify important topics from their news feed and/or facebook groups
+ and find similarities among posts.
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+How I got this idea
+\series default
+: Facebook Groups use 
+\begin_inset Quotes eld
+\end_inset
+
+exact-match
+\begin_inset Quotes erd
+\end_inset
+
+ search, which might not be particularly helpful when a user wants to search
+ for a certain topic but doesn't know the exact term.
+ I often found myself trying different terms like 
+\begin_inset Quotes eld
+\end_inset
+
+declaring
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes eld
+\end_inset
+
+minimum GPA
+\begin_inset Quotes erd
+\end_inset
+
+, etc.
+ to look for any posts related to the new major declaration policy implemented
+ starting Spring 2014 for the Computer Science major.
+ A simple TFIDF model with Cosine Similarity could make a huge difference
+ in finding useful information for most Facebook users based on the post
+ content.
+\end_layout
+
+\begin_layout Section
+API Usage
+\end_layout
+
+\begin_layout Standard
+The Facebook Graph API currently allows data from
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+url{https://developers.facebook.com/docs/reference/api/search/}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+:
+\end_layout
+
+\begin_layout Itemize
+All public posts
+\end_layout
+
+\begin_layout Itemize
+People
+\end_layout
+
+\begin_layout Itemize
+Pages
+\end_layout
+
+\begin_layout Itemize
+Groups
+\end_layout
+
+\begin_layout Standard
+which would be most of the data required for this project.
+ For example, using python-facebook, I could get all of my friends by executing
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+>>> graph = facebook.GraphAPI(oauth_access_token) 
+\end_layout
+
+\begin_layout Plain Layout
+
+>>> profile = graph.get_object("me") 
+\end_layout
+
+\begin_layout Plain Layout
+
+>>> friends = graph.get_connections("me", "friends")
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+and from there, retrieve their public posts for analysis.
+\end_layout
+
+\begin_layout Standard
+I have not been able to find any information about how much data the API
+ allows me to access, though I don't think there is any hard cap, since
+ most Facebook apps constantly access users' information and post to their
+ walls 24/7.
+\end_layout
+
+\begin_layout Section
+Project Goals
+\end_layout
+
+\begin_layout Itemize
+To identify important keywords from a user's news feed and/or facebook groups,
+ and classify them into different categories.
+ NLP Concepts applied: Stemming, Lemmatization, POS Tagging, Chunking/Noun-phras
+e Extraction, Classfication.
+\end_layout
+
+\begin_layout Itemize
+To find similar posts related to a user's interest.
+ NLP Concepts applied: TFIDF, Cosine Similarity, perhaps Latent Semantic
+ Analysis.
+\end_layout
+
+\begin_layout Itemize
+Unlike Twitter, which has a 140-letter limit, most Facebook posts are often
+ spelled out in full.
+ I believe this fact would greatly help any stemming/lemmatizing algorithms
+ applied on Facebook posts.
+ This would make sentiment analysis a great addition to the project, though
+ it is not as important as the two main goals above.
+\end_layout
+
+\begin_layout Itemize
+Finally, visualize the search result from Facebook and from the NLP approach
+ in this project side by side, and compare and contrast them.
+\end_layout
+
+\begin_layout Section
+Evaluation
+\end_layout
+
+\begin_layout Standard
+I plan to compare and contrast the current search functionality that Facebook
+ has, versus the NLP approach that I decide to tackle in this project.
+ In the end, I hope to display the searches side by side and conclude whether
+ the NLP approach yield better result.
+ 
+\end_layout
+
+\begin_layout Standard
+An example search using the Facebook API would look like: 
+\family typewriter
+https://graph.facebook.com/search?q=watermelon&type=post
+\family default
+.
+ In this project, I plan to retrieve the data (perhaps saving locally first
+ before moving on to real-time data) and process the search result in the
+ backend.
+ It might not be as fast as Facebook search, but comparing the results would
+ be interesting.
+ The two kinds of search would then be compared and displayed side by side.
+ 
+\end_layout
+
+\begin_layout Standard
+This would be especially interesting when applying to students searching
+ unofficial university Facebook groups, since oftentimes Facebook search
+ functionality for groups can be frustrating and doesn't exactly yield the
+ expected result.
+ The answer to several questions posed by new students (like GPA cutoff
+ or major requirement) can almost always be found from a search, so hopefully
+ this would provide students a better alternative to look for helpful informatio
+n from a group page.
+\end_layout
+
+\begin_layout Section
+Roles
+\end_layout
+
+\begin_layout Standard
+Unfortunately, there were some last-minute changes among previous team members,
+ and I will be tackling this final project by myself.
+ I recognize it as a challenging and ambitious task, but by no means detrimental.
+ By the end of this project, I hope to develop a stronger understanding
+ of many NLP concepts covered in this course, and to have a better idea
+ of working with real-world, messy data like Facebook posts.
+\end_layout
+
+\begin_layout Standard
+A non-exhaustive list of tasks includes: create a Facebook token to access
+ users' posts, build a robust chunker to extract important noun phrases,
+ use the Bag of words and TFIDF model to create a large matrix of documents
+ for computing similarity, and visualize and output the result in some format,
+ hopefully all in a single web application, for the final presentation.
+ 
+\end_layout
+
+\begin_layout Section
+Resources
+\end_layout
+
+\begin_layout Standard
+To first acquire users' posts, the Facebook Graph API would be very essential.
+ First, I plan to cache some data for locally use using Python's cPickle,
+ and then allow users to log in to the app with their Facebook accounts
+ for live contents.
+ After that, some important NLP tools I would like to try out include:
+\end_layout
+
+\begin_layout Itemize
+NLTK (
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+url{http://nltk.org/}
+\end_layout
+
+\end_inset
+
+)
+\end_layout
+
+\begin_layout Itemize
+Pattern (
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+url{http://www.clips.ua.ac.be/pattern}
+\end_layout
+
+\end_inset
+
+), which has some great built-in TFIDF functionalities
+\end_layout
+
+\begin_layout Itemize
+TextBlob (
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+url{https://textblob.readthedocs.org/en/latest/}
+\end_layout
+
+\end_inset
+
+), which includes simple noun phrase extraction and sentiment analysis
+\end_layout
+
+\begin_layout Itemize
+scikit-learn (
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+url{http://scikit-learn.org/stable/}
+\end_layout
+
+\end_inset
+
+), for machine learning and classification tasks
+\end_layout
+
+\begin_layout Standard
+For visualizing the output, Matplotlib is without a doubt the first choice.
+ I would also want to look into NetworkX for creating similarity graph,
+ and Pandas for displaying and visualizing Facebook posts in a time series.
+\end_layout
+
+\begin_layout Section
+Schedule
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+Week of Nov 3
+\series default
+: Since the project proposal is due this week, it's not recommended that
+ we start implementing immediately without first receiving feedback.
+ To that end, I plan to simply create a Facebook token and play around with
+ their API for accessing users' posts, since this part has very little to
+ do with the NLP-part of the project.
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+Week of Nov 10
+\series default
+: Cache the data locally, and build a chunker to extract important noun
+ phrases from sample Facebook posts.
+ Also find features for the classification task.
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+Week of Nov 17:
+\series default
+ Carry out the actual classification implementation, and try out the TFIDF/Cosin
+e Similarity algorithms to detect similarities among posts.
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+Week of Nov 24
+\series default
+: Finish up with similarity measurement, and try out different algorithms
+ like Jaccard Similarity or LSA to see if there's any improvement
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+Week of Dec 1
+\series default
+: Sync the engine with live contents from Facebook, and build a simple interface
+ that would allow users to compare Facebook search with the NLP approach.
+ Begin typing up the final report.
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+Week of Dec 8
+\series default
+: Wrap up everything, ready for the awesome final project demonstration,
+ and submit the report!
+\end_layout
+
+\end_body
+\end_document

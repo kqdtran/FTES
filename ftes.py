@@ -8,7 +8,7 @@
 
 # <codecell>
 
-ACCESS_TOKEN = 'CAACEdEose0cBAGmngXljzIoIg84zDWFeuxGxO1ixulIDUkZBhzqMljCvhJnBwwR2gSKuG1lYGfsfoCicJ4MCNcCjXmIbYZC1pAd2Opvcowum88DImGSBxbUXOPhop2IPKSbjgLvAxc72znespZBgvMCzB4KZBrynvo3noo2HnMc9CLnaXuZAFDGDODoNYz3KSlOZCQZC7SdIQZDZD'
+ACCESS_TOKEN = 'CAACEdEose0cBAM3TUmgXtVSCCvdHoncQqpKbp6WrCrGuNMQtgBsZBiJtGwZAKZA1bC5CGKhtCNnURflb9L1GVy51rOiAfJvOl1nE302TApqemz2om6ZAjZAlOVNOURIgyZAYYGTq0S94TI1GSay0Jif86ZCKSpiAggbKK3byqBIbCVIvKtfRQrScupeZCSWSTs3NHcH7nD5RbQZDZD'
 
 # <markdowncell>
 
@@ -16,16 +16,15 @@ ACCESS_TOKEN = 'CAACEdEose0cBAGmngXljzIoIg84zDWFeuxGxO1ixulIDUkZBhzqMljCvhJnBwwR
 
 # <codecell>
 
-import requests
-import json
 import facebook  # pip install facebook-sdk, not facebook
 import numpy as np
 import matplotlib.pyplot as plt
 import networkx as nx
 %matplotlib inline
 
-from prettytable import PrettyTable
-from collections import Counter
+import requests
+import json
+import simplejson as sj
 
 # <codecell>
 
@@ -40,7 +39,20 @@ def pp(o):
 # Creates a connection to the Graph API with your access token
 g = facebook.GraphAPI(ACCESS_TOKEN)
 
+# Sets a few request URL for later use
+me_url = 'https://graph.facebook.com/me/home?q=facebook&access_token=' + ACCESS_TOKEN
+req = requests.get(me_url)
+req
+
 # <codecell>
 
-g.get_connections("me", "friends")
+my_feed = sj.loads(req.content)['data']
+print len(my_feed)
+
+# <codecell>
+
+# Retrieves a group
+# The example below uses the Berkeley CS Group
+cal_cs_id = '266736903421190'
+pp(g.get_connections(cal_cs_id, 'feed'))
 
