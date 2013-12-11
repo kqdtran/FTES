@@ -8,7 +8,7 @@
 
 # <codecell>
 
-ACCESS_TOKEN = 'CAACEdEose0cBAM3TUmgXtVSCCvdHoncQqpKbp6WrCrGuNMQtgBsZBiJtGwZAKZA1bC5CGKhtCNnURflb9L1GVy51rOiAfJvOl1nE302TApqemz2om6ZAjZAlOVNOURIgyZAYYGTq0S94TI1GSay0Jif86ZCKSpiAggbKK3byqBIbCVIvKtfRQrScupeZCSWSTs3NHcH7nD5RbQZDZD'
+ACCESS_TOKEN = 'CAACEdEose0cBANbufuqn7hIhZCtTnmdeLlhLRaNz02JbCoA5f3i9TxpaCjBRktyqgkQwpSuO7nTJC3UXtj3YDrh7WFLp0ELEZAM6rgV1mQFp8ytzdsiTk4ZB0LE9NwohpPu9hgBvjfkR5h7He13GZBSzA92LtRcKplMx56NQP7uLu7evbsw7EIUZACi9OnRDtSOQNlzIjzQZDZD'
 
 # <markdowncell>
 
@@ -32,7 +32,7 @@ def pp(o):
     '''
     A helper function to pretty-print Python objects as JSON
     '''
-    print json.dumps(o, indent=1)
+    print json.dumps(o, indent=2)
 
 # <codecell>
 
@@ -49,10 +49,57 @@ req
 my_feed = sj.loads(req.content)['data']
 print len(my_feed)
 
+# <markdowncell>
+
+# ## Seriously, Facebook?
+# 
+# ![Facebook search is so easy to see!](files/img/fb_search_1.png)
+
+# <markdowncell>
+
+# # Retrieves a group's feed
+
+# <markdowncell>
+
+# **To retrieve a group's feed, you first need to obtain the group's ID. To my knowledge, Facebook unfortunately 
+# doesn't offer any easy way to do that. 'View Page Source' is one option, but I've found a couple of third-party 
+# services like http://wallflux.com/facebook_id/ is much easier to use**   
+# 
+# The example below uses the **Berkeley CS Group** https://www.facebook.com/groups/berkeleycs/
+
 # <codecell>
 
-# Retrieves a group
-# The example below uses the Berkeley CS Group
+SEARCH_LIMIT = 500  # facebook allows 500 max
 cal_cs_id = '266736903421190'
-pp(g.get_connections(cal_cs_id, 'feed'))
+cal_cs_feed = g.get_connections(cal_cs_id, 'feed', limit=SEARCH_LIMIT)['data']
+pp(cal_cs_feed)
+
+# <codecell>
+
+len(cal_cs_feed)
+
+# <codecell>
+
+def print_feed(feed):
+    '''
+    Prints out every post, along with its comments, in a feed
+    '''
+    for post in feed:
+        msg = post['message'].encode('ascii', 'ignore').\
+            replace('\n', ' ').replace('\r', '').strip()
+        print 'POST:', msg, '\n'
+        print 'COMMENTS:'
+        
+        if 'comments' in post:
+            for comment in post['comments']['data']:
+                comment = comment['message'].encode('ascii', 'ignore').\
+                    replace('\n', ' ').replace('\r', '').strip()
+                if comment is not None and comment != '':
+                    print '+', comment
+        print '-----------------------------------------\n'
+        
+print_feed(cal_cs_feed[:5])
+
+# <codecell>
+
 
