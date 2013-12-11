@@ -475,9 +475,9 @@ create_cloud(c)
 
 # ##Why?
 # 
-# * Inspired by 'Mining the Social Web, 2nd edition*
+# * Inspired by *Mining the Social Web, 2nd edition*
 # 
-# * Currently taking an algorithm course... should be interesting to try out on real-world graph
+# * Currently taking an algorithm course... should be interesting to try out on real-world graph!
 
 # <codecell>
 
@@ -504,11 +504,21 @@ nxg = nx.Graph()
 
 nx.draw(nxg)
 
+# <markdowncell>
+
+# # Max Clique
+# 
+# * From Wiki: maximum set of elements where each pair of elements is connected
+# 
+# * What it means in social network: a set of people where everyone knows each other
+
 # <codecell>
 
 # Finding cliques is a hard problem, so this could take a while for large graphs
 # See http://en.wikipedia.org/wiki/NP-complete and 
 # http://en.wikipedia.org/wiki/Clique_problem
+
+# Adapted from Mining the Social Web, 2nd edition
 
 cliques = [c for c in nx.find_cliques(nxg)]
 num_cliques = len(cliques)
@@ -523,6 +533,10 @@ num_max_cliques = len(max_cliques)
 max_clique_sets = [set(c) for c in max_cliques]
 friends_in_all_max_cliques = list(reduce(lambda x, y: x.intersection(y),
                                   max_clique_sets))
+#print 'Max cliques:'
+#print json.dumps(max_cliques, indent=1)
+
+# <codecell>
 
 print 'Num cliques:', num_cliques
 print 'Avg clique size:', avg_clique_size
@@ -531,17 +545,14 @@ print 'Num max cliques:', num_max_cliques
 print
 print 'Friends in all max cliques:'
 print json.dumps(friends_in_all_max_cliques, indent=1)
-print
-print 'Max cliques:'
-print json.dumps(max_cliques, indent=1)
+
+# <markdowncell>
+
+# ## Min Vertex Cover
 
 # <codecell>
 
 '''
-************
-Vertex Cover
-************
-
 Given an undirected graph `G = (V, E)` and a function w assigning nonnegative
 weights to its vertices, find a minimum weight subset of V such that each edge
 in E is incident to at least one vertex in the subset.
@@ -586,7 +597,17 @@ def min_weighted_vertex_cover(graph, weight=None):
 
 # <codecell>
 
-print min_weighted_vertex_cover(nxg)
+min_cover = min_weighted_vertex_cover(nxg)
+print len(min_cover)
+print min_cover
+
+# <markdowncell>
+
+# ## Challenges:
+# 
+# * Graph API documentation
+# * FB Access Token expires every two hours...
+# * Sooooo much more to do...
 
 # <markdowncell>
 
@@ -603,6 +624,10 @@ print min_weighted_vertex_cover(nxg)
 # * There are quite some noises ('http', 'www', etc.) and words that don't really tell you anything new ('class', 'course', etc.)    
 # 
 # * The overall result seems consistent with what most CS students usually discuss on FB ('telebears', '61B', etc.)
+# 
+# Part III:
+# 
+# * Mostly to try out different hard problems on a real social graph!
 # 
 # Overall a great project to work on and extend in the future!
 
