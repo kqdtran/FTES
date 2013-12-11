@@ -24,6 +24,18 @@
 
 # <markdowncell>
 
+# ## Why Facebook?
+# 
+# * Hasn't been explored that much compared to Twitter, mostly due to the complexity (~~and bad documentation~~) of the API
+# 
+# * No 140-character limit => more full, grammatically-correct words for NLP analysis
+# 
+# * Very little support for Python (official languages include JS, PHP, among a couple others) => great problem to crack
+# 
+# * Finally... (I) never did this before => should be interesting
+
+# <markdowncell>
+
 # ![](files/img/fb_search_1.png)
 
 # <markdowncell>
@@ -33,7 +45,7 @@
 
 # <codecell>
 
-ACCESS_TOKEN = 'CAACEdEose0cBAMkOPptLZCUoAlRsUfD5nOnLcDo32ce6KZBKCxhOJ6E4YBjrQAFAxmoWmIdyd8AWl1TJoghswmnUKrTixUB5Toil9FsyfTy8YLjCfq292flRfYIJML0nzf3QwpR5nOnOGXLfntTlvriHnrXZBRQUChXMv3NPNbPTdeoKdgxDuXt7QCpfhVO8GCUXcNZAggZDZD'
+ACCESS_TOKEN = 'CAACEdEose0cBAP1vPpXuaZBu35f6fJqCI4ZCZBUEaiZA8ZAMgwALdqiUt4EkzHwMgvBuJNF5BtZBv2AuZAkzEbye66xTxwJHJLnEfKYXAUZCYWj5btIb8rxHdGIVfT5pv6ZBoMygLyOVDYSBgrMsFHy8P3bV7JH2o5Fie2SDZClmjIMLVp3oPd1OSU7ZCp1VCxxV0OL71ZCVTeOhGAZDZD'
 SEARCH_LIMIT = 500  # facebook allows 500 max
 
 # <markdowncell>
@@ -454,6 +466,127 @@ create_cloud(c)
 # <markdowncell>
 
 # ![](files/img/cloud_large.png)
+
+# <markdowncell>
+
+# # Part III: Mutual Friendships Analysis
+
+# <markdowncell>
+
+# ##Why?
+# 
+# * Inspired by 'Mining the Social Web, 2nd edition*
+# 
+# * Currently taking an algorithm course... should be interesting to try out on real-world graph
+
+# <codecell>
+
+friends = [ (friend['id'], friend['name'],)
+                for friend in g.get_connections('me', 'friends')['data'] ]
+
+url = 'https://graph.facebook.com/me/mutualfriends/%s?access_token=%s'
+
+mutual_friends = {}
+
+# This loop spawns a separate request for each iteration, so
+# it may take a while.
+for friend_id, friend_name in friends:
+    r = requests.get(url % (friend_id, ACCESS_TOKEN,) )
+    response_data = json.loads(r.content)['data']
+    mutual_friends[friend_name] = [ data['name'] 
+                                    for data in response_data ]
+    
+nxg = nx.Graph()
+[ nxg.add_edge('me', mf) for mf in mutual_friends ]
+[ nxg.add_edge(f1, f2) 
+  for f1 in mutual_friends 
+      for f2 in mutual_friends[f1] ]
+
+nx.draw(nxg)
+
+# <codecell>
+
+# Finding cliques is a hard problem, so this could take a while for large graphs
+# See http://en.wikipedia.org/wiki/NP-complete and 
+# http://en.wikipedia.org/wiki/Clique_problem
+
+cliques = [c for c in nx.find_cliques(nxg)]
+num_cliques = len(cliques)
+clique_sizes = [len(c) for c in cliques]
+max_clique_size = max(clique_sizes)
+avg_clique_size = sum(clique_sizes) / num_cliques
+
+max_cliques = [c for c in cliques if len(c) == max_clique_size]
+
+num_max_cliques = len(max_cliques)
+
+max_clique_sets = [set(c) for c in max_cliques]
+friends_in_all_max_cliques = list(reduce(lambda x, y: x.intersection(y),
+                                  max_clique_sets))
+
+print 'Num cliques:', num_cliques
+print 'Avg clique size:', avg_clique_size
+print 'Max clique size:', max_clique_size
+print 'Num max cliques:', num_max_cliques
+print
+print 'Friends in all max cliques:'
+print json.dumps(friends_in_all_max_cliques, indent=1)
+print
+print 'Max cliques:'
+print json.dumps(max_cliques, indent=1)
+
+# <codecell>
+
+'''
+************
+Vertex Cover
+************
+
+Given an undirected graph `G = (V, E)` and a function w assigning nonnegative
+weights to its vertices, find a minimum weight subset of V such that each edge
+in E is incident to at least one vertex in the subset.
+
+http://en.wikipedia.org/wiki/Vertex_cover
+
+Adapted from Nicholas Mancuso's <nick.mancuso@gmail.com>
+'''
+
+from networkx.utils import *
+
+@not_implemented_for('directed')
+def min_weighted_vertex_cover(graph, weight=None):
+    '''
+    Find an approximate minimum weighted vertex cover of a graph.
+
+    Parameters
+    ----------
+    graph : NetworkX graph (undirected)
+    weight : None or string, optional (default = None)
+        If None, every edge has weight/distance/cost 1. If a string, use this
+        edge attribute as the edge weight. Any edge attribute not present
+        defaults to 1.
+
+    Returns
+    -------
+    min_weighted_cover : set
+      Returns a set of vertices
+
+    '''
+    weight_func = lambda nd: nd.get(weight, 1)
+    cost = dict((n, weight_func(nd)) for n, nd in graph.nodes(data=True))
+
+    # while there are edges uncovered, continue
+    for u, v in graph.edges_iter():
+        # select some uncovered edge
+        min_cost = min([cost[u], cost[v]])
+        cost[u] -= min_cost
+        cost[v] -= min_cost
+
+    return set(u for u in cost if cost[u] == 0)
+
+# <codecell>
+
+print min_weighted_vertex_cover(nxg)
 
 # <markdowncell>
 
