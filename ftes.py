@@ -28,7 +28,7 @@
 # 
 # * Hasn't been explored that much compared to Twitter, mostly due to the complexity (~~and bad documentation~~) of the API
 # 
-# * No 140-character limit => more full, grammatically-correct words for NLP analysis
+# * No 140-character limit like Twitter => more full, grammatically-correct words for NLP analysis
 # 
 # * Very little support for Python (official languages include JS, PHP, among a couple others) => great problem to crack
 # 

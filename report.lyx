@@ -7,6 +7,7 @@
 \PassOptionsToPackage{normalem}{ulem}
 \usepackage{ulem}
 \usepackage{listings}\usepackage{url}\usepackage{parskip}
+\usepackage [numbers]{natbib}
 \end_preamble
 \use_default_options false
 \maintain_unincluded_children false
@@ -73,20 +74,203 @@ Facebook Topics Extraction System (FTES)
 Khoa Tran - INFO 256 Fall 2013
 \end_layout
 
+\begin_layout Standard
+\begin_inset CommandInset toc
+LatexCommand tableofcontents
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Newpage pagebreak
+\end_inset
+
+
+\end_layout
+
 \begin_layout Section
+Introduction
+\end_layout
+
+\begin_layout Standard
+Dealing with social network data and extracting information from them is
+ increasingly becoming a major topic in Natural Language Processing and
+ Data Mining.
+ In recent years, Twitter datastream is used to predict stocks
+\begin_inset CommandInset citation
+LatexCommand cite
+key "StockMarket"
+
+\end_inset
+
+, as well as flu outbreaks
+\begin_inset CommandInset citation
+LatexCommand cite
+key "MITFlu"
+
+\end_inset
+
+, among other things.
+ In this final project, Facebook feeds are explored to build a simple search
+ system and to determine popular topics being discussed in real time.
+\end_layout
+
+\begin_layout Subsection
 Project Goals
 \end_layout
 
-\begin_layout Section
-Data
+\begin_layout Itemize
+To extract information related to a search query, and compare the result
+ with Facebook's search
+\end_layout
+
+\begin_layout Itemize
+To identify popular topics in a given facebook page
+\end_layout
+
+\begin_layout Subsection
+Motivation
+\end_layout
+
+\begin_layout Standard
+Facebook search uses different metrics, including but not limited to, the
+ number of views, likes, and comments.
+ Based on these counts, it then decides which posts would be most relevant
+ to a given search query.
+ While popularity is certainly an interesting metric, oftentimes the search
+ result doesn't carry the relevant information.
+ For example, a sarcastic response with completely opposite information,
+ which is often the case on social network, may receive many 'likes' from
+ other users.
+ To that end, one of the project goals is to determine how well the NLP
+ approach - a bag of words model with TFIDF weighting and Cosine Distance
+ Similarity - would perform compare to Facebook search.
+\end_layout
+
+\begin_layout Standard
+Apart from search, there's much to learn from Facebook feeds.
+ One common example would be what popular topics are being discussed.
+ Twitter introduced 
+\begin_inset Quotes eld
+\end_inset
+
+trendings
+\begin_inset Quotes erd
+\end_inset
+
+ a few years back, which allows its users to see what everyone else around
+ the world is talking about.
+ Given a long list of posts, how would a user determine the popular topics
+ without scrolling through every single post? The second goal of this project
+ is to answer this question.
+\end_layout
+
+\begin_layout Subsection
+Why Facebook?
+\end_layout
+
+\begin_layout Standard
+There are certainly many interesting datasets out there, but nothing comes
+ close to the excitement from working with live data that one sees everyday.
+ Why was Facebook chosen over Twitter, Github, or other social networking
+ sites? First, Facebook feeds have not been explored much compared to other
+ social networks, mostly due to the complexity and not well-designed documentati
+on of the API.
+ Second, the FB API doesn't offer official support to some popular programming
+ languages such as Python, Ruby, etc.
+ This is mostly because Facebook Apps developers tend to prefer Javascript
+ or PHP over aforementioned languages for different reasons.
+ Hence, tackling this project using the unofficial Python Facebook SDK is
+ a fantastic and challenging problem to crack.
+\end_layout
+
+\begin_layout Standard
+Furthermore, unlike Twitter who requires a 140-character limit in every
+ tweet, there is no limit to the length of a Facebook post.
+ This is actually good news for the NLP approach because words are more
+ often spelled out in full on Facebook than on Twitter.
 \end_layout
 
 \begin_layout Section
-Algorithms
+API Usage, Dataset, and External Dependencies
+\end_layout
+
+\begin_layout Subsection
+API Usage
+\end_layout
+
+\begin_layout Standard
+Facebook Search API
+\begin_inset CommandInset citation
+LatexCommand cite
+key "FBGroupAPI"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Dataset
+\end_layout
+
+\begin_layout Standard
+The corpus used in this project came from the UC Berkeley Computer Science
+ Facebook group, which was last updated on Thursday, December 12, at 11am
+ PST.
+\end_layout
+
+\begin_layout Subsection
+External Dependencies
 \end_layout
 
 \begin_layout Section
-Summary
+Simple Search Engine
+\end_layout
+
+\begin_layout Subsection
+Approach
+\end_layout
+
+\begin_layout Subsection
+Algorithm
+\end_layout
+
+\begin_layout Subsection
+Result
+\end_layout
+
+\begin_layout Section
+Popular Topics Analysis
+\end_layout
+
+\begin_layout Subsection
+Approach
+\end_layout
+
+\begin_layout Subsection
+Algorithm
+\end_layout
+
+\begin_layout Subsection
+Result
+\end_layout
+
+\begin_layout Section
+Summary and Future Work
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset bibtex
+LatexCommand bibtex
+bibfiles "reference"
+options "bibtotoc,plainnat"
+
+\end_inset
+
+
 \end_layout
 
 \end_body
