@@ -12,6 +12,22 @@
 \end_preamble
 \use_default_options false
 \maintain_unincluded_children false
+\begin_local_layout
+InsetLayout Flex:Code
+    LyxType               charstyle
+    LabelString           code
+    LatexType             command
+    LatexName             code
+    Font
+      Family              Typewriter
+    EndFont
+    Preamble
+    \newcommand{\code}[1]{\texttt{#1}}
+    EndPreamble
+    InToc                 true
+    HTMLTag               code
+End
+\end_local_layout
 \language english
 \language_package none
 \inputencoding latin9
@@ -482,7 +498,7 @@ simplejson
 \end_layout
 
 \begin_layout Standard
-Numerical Computing and Plotting:
+Numerical Computation and Visualization:
 \end_layout
 
 \begin_layout Itemize
@@ -504,6 +520,20 @@ networkx
 \family default
 , a package built on top of matplotlib, is used to visualize the connections
  in a Facebook social graph
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Flex Code
+status collapsed
+
+\begin_layout Plain Layout
+pytagcloud
+\end_layout
+
+\end_inset
+
+, a Wordle-inspired package, is used to generate word cloud completely in
+ Python
 \end_layout
 
 \begin_layout Standard
@@ -625,7 +655,7 @@ url{http://bit.ly/19Fzr5p}
 
 .
 \begin_inset Foot
-status open
+status collapsed
 
 \begin_layout Plain Layout
 
@@ -667,13 +697,12 @@ pip install -r requirements.txt
 \family typewriter
 virtualenv
 \family default
- environment to avoid any potential conflicts.
+ environment to avoid any potential dependency conflicts.
 \end_layout
 
 \begin_layout Standard
-The project was developed in Ubuntu 12.10.
- Please do not hesitate to contact the author for any questions regarding
- the project and how to reproduce the result.
+Please contact the author for any questions regarding the project and reproducin
+g the result.
 \end_layout
 
 \begin_layout Section
@@ -681,15 +710,517 @@ Simple Search Engine
 \end_layout
 
 \begin_layout Subsection
-Approach
+High-level Idea
+\end_layout
+
+\begin_layout Standard
+After retrieving the feeds from Facebook, the data is converted from JSON
+ format to a Python dictionary.
+ I decided to treat comments equally as the original posts, since they more
+ or less carry information of the same quality.
+ For simplicity, each original post and comment will be referred to as 
+\begin_inset Quotes eld
+\end_inset
+
+post
+\begin_inset Quotes erd
+\end_inset
+
+ from this point forward.
+\end_layout
+
+\begin_layout Standard
+Each post is then converted into an unordered bag-of-words representation,
+ which is represented under the hood as a dictionary of 
+\family typewriter
+(word,count)
+\family default
+ tuples.
+ A collection of posts, or documents, is a bag-of-words model.
+ One common way to represent this model is to treat each document as a vector
+ of length 
+\begin_inset Formula $n$
+\end_inset
+
+, where 
+\begin_inset Formula $n$
+\end_inset
+
+ is the number of unique words in the entire model.
+ Given a vector 
+\begin_inset Flex Code
+status collapsed
+
+\begin_layout Plain Layout
+vec
+\end_layout
+
+\end_inset
+
+, 
+\begin_inset Flex Code
+status collapsed
+
+\begin_layout Plain Layout
+vec[i]
+\end_layout
+
+\end_inset
+
+ would return how many times a word with id 
+\begin_inset Formula $i$
+\end_inset
+
+ appears in the document represented by 
+\begin_inset Flex Code
+status collapsed
+
+\begin_layout Plain Layout
+vec
+\end_layout
+
+\end_inset
+
+.
+ Hence, the entire model is a matrix of size 
+\begin_inset Formula $m\times n$
+\end_inset
+
+, with 
+\begin_inset Formula $m$
+\end_inset
+
+ being the total number of documents and 
+\begin_inset Formula $n$
+\end_inset
+
+ retains the same definition above.
+\end_layout
+
+\begin_layout Standard
+It is very common to 
+\begin_inset Quotes eld
+\end_inset
+
+offset
+\begin_inset Quotes erd
+\end_inset
+
+ the simple term frequency model above since stopwords like 
+\begin_inset Quotes eld
+\end_inset
+
+the
+\begin_inset Quotes erd
+\end_inset
+
+ could appear many times, yet doesn't give us any useful information.
+ The Term Frequency - Inverse Document Frequency weighting schema, better
+ known as TFIDF, is often used in such cases.
+ This value would increase proportionally to the frequency of a term in
+ a given document, but is then offset by the same term's frequency in the
+ entire corpus
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Wiki-TFIDF"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+A higher TFIDF score indicates that the corresponding word is more important.
+ After producing a matrix which contains TFIDF weights, we can measure how
+ similar two documents are by calculating the cosine distance between them.
+ Given vectors 
+\begin_inset Formula $v_{1}$
+\end_inset
+
+ and 
+\begin_inset Formula $v_{2}$
+\end_inset
+
+, one can calculate the cosine similarity between them by dividing their
+ dot product by the product of their norms, 
+\begin_inset Formula $cos\theta=\frac{v_{1}\cdot v_{2}}{||v_{1}||\cdot||v_{2}||}$
+\end_inset
+
+
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Wiki-Cosine"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+To answer the question 
+\begin_inset Quotes eld
+\end_inset
+
+which post is most related to a search query?
+\begin_inset Quotes erd
+\end_inset
+
+, one simply calculate the cosine similarity between the input query vector
+ and every document vector currently in the model.
+ The highest ranked results are then returned as the most related posts
+ to the search query.
 \end_layout
 
 \begin_layout Subsection
-Algorithm
+Text Processing
+\end_layout
+
+\begin_layout Standard
+Let us slightly backtrack and discuss the result of several text procesing
+ techniques.
+ The raw JSON data in Unicode was first converted to ASCII and all newline
+ and carriage return characters are stripped out.
+ The following techniques are all tried out to determine if there is any
+ improvement over processing the raw ASCII text:
+\end_layout
+
+\begin_layout Itemize
+Lowercasing
+\end_layout
+
+\begin_layout Itemize
+Stemming
+\end_layout
+
+\begin_layout Itemize
+Lemmatization
+\end_layout
+
+\begin_layout Itemize
+Stripping punctuations
+\end_layout
+
+\begin_layout Itemize
+Spelling correction
+\end_layout
+
+\begin_layout Standard
+Of the five techniques, it turns out that lowercasing and lemmatization
+ work best.
+ Stemming did not work so well because most stemming techniques like the
+ Porter stemmer tend to turn grammatically correct English words to incorrect
+ ones with its greedy approach.
+ The stemmed document sees drop in the similarity score because the words
+ do not match the input query as often anymore.
+\end_layout
+
+\begin_layout Standard
+Stripping punctuations was an interesting approach.
+ While punctuation in general seems to 
+\begin_inset Quotes eld
+\end_inset
+
+stuck
+\begin_inset Quotes erd
+\end_inset
+
+ with a token, there are interesting ones like 
+\begin_inset Quotes eld
+\end_inset
+
+you're
+\begin_inset Quotes erd
+\end_inset
+
+ where stripping punctuations would quite mess things up, whether we replace
+ the apostrophe with a whitespace or not.
+ Perhaps the best approach to take here would be to translate such terms
+ to its full words like 
+\begin_inset Quotes eld
+\end_inset
+
+you are
+\begin_inset Quotes erd
+\end_inset
+
+, though this was not implemented in the project.
+\end_layout
+
+\begin_layout Standard
+Finally, spelling correction was also tested out.
+ Two approaches were taken, though neither yield better search results.
+ The first approach is to build a list of possible 
+\begin_inset Quotes eld
+\end_inset
+
+suggestions
+\begin_inset Quotes erd
+\end_inset
+
+, and from there, choose the word with the minimum edit distance.
+ If there are ties, either choose the first result or choose one at random.
+ The second, more sophisticated approach comes from Peter Norvig's famous
+ blog post
+\begin_inset CommandInset citation
+LatexCommand cite
+key "SpellingCorrectorNorvig"
+
+\end_inset
+
+, which describes a model powered under the hood by Bayes Theorem, along
+ with a training corpus consisting of several public books from Project
+ Gutenberg and many other sources.
+\end_layout
+
+\begin_layout Subsection
+Coding
+\end_layout
+
+\begin_layout Standard
+Pattern, the web mining module described in Section 2.3, convenient came
+ with a built-in Document-Term model and TFIDF weighting.
+ Each Facebook post is treated as a 
+\begin_inset Flex Code
+status collapsed
+
+\begin_layout Plain Layout
+pattern
+\end_layout
+
+\end_inset
+
+'s Document object, and lemmatization as well as stopwords removal are applied
+ whilst constructing the document.
+ To make the result more meaningful and easily comparable with Facebook
+ search, the permanent link to the post is embedded as a description of
+ the document, so that we can later retrieve the link with dot notation
+ syntax like 
+\begin_inset Flex Code
+status collapsed
+
+\begin_layout Plain Layout
+doc.description
+\end_layout
+
+\end_inset
+
+.
+ All the documents are then put into a Model object; in other words, a Model
+ is just a collection of Documents.
+\end_layout
+
+\begin_layout Standard
+To calculate similarity between an input term and every document in the
+ downloaded Facebook feeds, we treat the input term as a separate Document
+ object, and find the top documents whose similarity scores are highest
+ to the input document.
+ Using the 
+\begin_inset Flex Code
+status collapsed
+
+\begin_layout Plain Layout
+neighbors
+\end_layout
+
+\end_inset
+
+ method with an optional parameter 
+\begin_inset Flex Code
+status collapsed
+
+\begin_layout Plain Layout
+top
+\end_layout
+
+\end_inset
+
+ which indicates how many results to retrieve, this can be done very quickly.
+ A 
+\begin_inset Flex Code
+status collapsed
+
+\begin_layout Plain Layout
+pattern
+\end_layout
+
+\end_inset
+
+'s Document or Model object offer many more interesting functionalities
+ - please refer to the official documentation
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+url{http://www.clips.ua.ac.be/pages/pattern-vector}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+ for further reading.
+\end_layout
+
+\begin_layout Standard
+The final result is then printed as a prettytable, which also includes links
+ to the original Facebook posts for comparison.
+ One of my initial project proposal goals is to build a system where users
+ could compare and contrast the NLP-based search and Facebook's search side
+ by side.
+ Unfortunately, that did not happen because the Facebook API offers no method
+ for searching within a group
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+url{https://developers.facebook.com/docs/reference/api/group/}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+.
+ Facebook group's search has to be run directly on Facebook itself, and
+ the result is then compared against the NLP approach, which shall be presented
+ in the next subsection.
 \end_layout
 
 \begin_layout Subsection
 Result
+\end_layout
+
+\begin_layout Standard
+To compare the result between the two approaches, I decided to come up with
+ different queries related to the CS major at UC Berkeley with respect to
+ the working corpus.
+ For example, trying out the query 
+\begin_inset Quotes eld
+\end_inset
+
+declaring major early
+\begin_inset Quotes erd
+\end_inset
+
+ yields the following top results:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename img/nlp_search_0.png
+	scale 65
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+, where the top result (with a significantly higher score than the rest)
+ corresponds to
+\end_layout
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename img/fb_search_2.png
+	scale 65
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+.
+ On the other hand, searching for the same query on Facebook returns
+\end_layout
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename img/fb_search_0.png
+	scale 65
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+, where the top result is
+\end_layout
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename img/fb_search_3.png
+	scale 65
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Let's dive into this a bit further.
+ Based on the content of the posts, why is there a discrepancy?
+\end_layout
+
+\begin_layout Subsection
+Analysis
+\end_layout
+
+\begin_layout Standard
+One thing that immediately took my attention was the fact that the top result
+ from the NLP approach is very short and concise.
+ Since the input query is also very short, this comes out to a very high
+ similarity score.
+ On the other hand, the top result from Facebook search seems very descriptive
+ and covers a very special case that few students would fall into.
+ In other words, this post seems to be much richer in content.
+ However, since the difference in length and in term frequency is very large,
+ this post has an unsurprisingly low similarity score with respect to the
+ asked query in the NLP approach.
+ In fact, it was not even in the top 10 results using TFIDF weighting and
+ cosine distance.
+\end_layout
+
+\begin_layout Standard
+After many similar experiments, I conclude that the difference in text length
+ is inversely proportional to the similarity score in the NLP approach.
+ The larger the difference, the more sparse the input query vector is, and
+ the lower the similarity score.
+ This is understandable, since the input vector has a lot of 
+\begin_inset Formula $0$
+\end_inset
+
+s in it, while an information-rich document includes many nonzero entries,
+ which leads to a smaller dot product and a bigger norm, both of which imply
+ a significant decrease in the cosine similarity scores.
+\end_layout
+
+\begin_layout Standard
+While the NLP approach is not a powerhouse search system with different
+ ranking metrics like that of Facebook, it certainly performs very well
+ just by looking at a post content.
 \end_layout
 
 \begin_layout Section
@@ -697,19 +1228,509 @@ Popular Topics Analysis
 \end_layout
 
 \begin_layout Subsection
-Approach
+Introduction
+\end_layout
+
+\begin_layout Standard
+Unlike Twitter who introduced the concept of 
+\begin_inset Quotes eld
+\end_inset
+
+what's trending now?
+\begin_inset Quotes erd
+\end_inset
+
+, it's relatively difficult to determine what people are talking most about
+ on Facebook given the current UI.
+ With Natural Language Processing, this becomes a goal completely within
+ reach.
+ After all, since this project has 
+\begin_inset Quotes eld
+\end_inset
+
+topics extraction
+\begin_inset Quotes erd
+\end_inset
+
+ in its name, it is now time to introduce a simple Popular Topics Analysis
+ system using Part of Speech Tagging and Chunking.
+\end_layout
+
+\begin_layout Standard
+The idea behind this system is to extract keywords from a Facebook post,
+ keep track of the frequency, and finally determine the most talked about
+ topic.
+ Once again, we do not take into account other metrics like the number of
+ likes; everything is extracted completely based on the raw text.
 \end_layout
 
 \begin_layout Subsection
-Algorithm
+Extracting Keywords
+\end_layout
+
+\begin_layout Standard
+At the heart of this system is identifying and extracting noun phrases from
+ an input text.
+ Before we can identify a noun phrase, a Part of Speech (POS) Tagger is
+ necessary.
+ In this project, a simple backoff POS Tagger was built based on the material
+ presented in Chapter 5 of the online NLTK book
+\begin_inset CommandInset citation
+LatexCommand cite
+key "NLTKBook"
+
+\end_inset
+
+.
+ It trains 90% of the tagged sentences in the Brown Corpus
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+url{https://en.wikipedia.org/wiki/Brown_Corpus}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+, and the default tagger would tag everything as a Noun.
+ The second level tagger would look for unigrams, whereas the next and final
+ one would tag bigrams.
+ The reason a backoff tagger work well is because in the event we cannot
+ assign a tag, we can always fall back one level and use a less robust tagger
+ instead.
+ This POS tagger has an evaluation accuracy of 84.49% on the remaining 10%
+ of the Brown Corpus.
+ The tagger is then pickled into a small binary file, so that we don't have
+ to keep on building a new one everytime we want to tag a sentence.
+\end_layout
+
+\begin_layout Standard
+With that said, let's move on to the chunker
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Chunker"
+
+\end_inset
+
+.
+ Two regular expression rules are used to extract the noun phrases:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+grammar = r'''    
+\end_layout
+
+\begin_layout Plain Layout
+
+	NBAR:         
+\end_layout
+
+\begin_layout Plain Layout
+
+		{<NN.*|JJ>*<NN.*>}              
+\end_layout
+
+\begin_layout Plain Layout
+
+	    
+\end_layout
+
+\begin_layout Plain Layout
+
+	NP:         
+\end_layout
+
+\begin_layout Plain Layout
+
+		{<NBAR>}         
+\end_layout
+
+\begin_layout Plain Layout
+
+		{<NBAR><IN><NBAR>}'''
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The first one would look for a combination of nouns and adjectives, terminated
+ with nouns.
+ The second one finds everything found in the first rule, along with noun
+ phrases from the first rule that are connected with preposition or subordinatin
+g conjunction, for example, 
+\begin_inset Quotes eld
+\end_inset
+
+in
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes eld
+\end_inset
+
+of
+\begin_inset Quotes erd
+\end_inset
+
+, etc.
+\end_layout
+
+\begin_layout Standard
+Once we have defined the rules, we can finally extract noun phrases from
+ a given text.
+ The document, i.e.
+ Facebook feed, is processed in the same way as in the previous section:
+ words are lowercases and lemmatized, and stopwords are filtered out.
+ We build a Part of Speech tree and iteratively construct noun phrases from
+ leaf node whose tag is 
+\begin_inset Quotes eld
+\end_inset
+
+NP
+\begin_inset Quotes erd
+\end_inset
+
+, or noun phrase.
+\end_layout
+
+\begin_layout Standard
+For every noun phrase extracted from a Facebook post, we add one to its
+ frequency count to later on check if it is among the most talked about
+ topics.
+ The result will be sorted in descending, and can be used as input for many
+ visualization software packages.
 \end_layout
 
 \begin_layout Subsection
 Result
 \end_layout
 
+\begin_layout Standard
+PyTagCloud, a Wordle-inspired package, is used in this project to output
+ the popular topics as a word cloud.
+ Applying topics extraction on the same corpus from the previous section,
+ the UC Berkeley Computer Science Facebook Group, we have some very fascinating
+ result.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename img/cloud_large.png
+	scale 47
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Analysis and Takeaways
+\end_layout
+
+\begin_layout Standard
+It appears that there are quite some noises in the final result.
+ This is not surprising, however, especially when words like 
+\begin_inset Quotes eld
+\end_inset
+
+http
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes eld
+\end_inset
+
+www
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes eld
+\end_inset
+
+facebook
+\begin_inset Quotes erd
+\end_inset
+
+ come from the fact that people usually share links with others on Facebook.
+ The Regular Expression parser used in this project stripped out some punctuatio
+ns, so as a result, a typical URL would be broken up into multiple pieces
+ containing the aforementioned words.
+ By filtering out some noises, we got the updated word cloud:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename img/cloud_large_1.png
+	scale 47
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+This is extremely consistent with the majority of the topics usually being
+ discussed on the CS Facebook Group! Questions about the CS 61 series, Telebears
+, the workload of different courses, etc.
+ pop up every now and then.
+ That said, there are quite a few strange terms floating around like 
+\begin_inset Quotes eld
+\end_inset
+
+eec
+\begin_inset Quotes erd
+\end_inset
+
+ or 
+\begin_inset Quotes eld
+\end_inset
+
+c class
+\begin_inset Quotes erd
+\end_inset
+
+.
+ This is an extremely mind-boggling point: the lemmatizer thinks of 
+\begin_inset Quotes eld
+\end_inset
+
+CS
+\begin_inset Quotes erd
+\end_inset
+
+ as in 
+\begin_inset Quotes eld
+\end_inset
+
+C
+\begin_inset Quotes erd
+\end_inset
+
+ in plural, so it strips out the 
+\begin_inset Quotes eld
+\end_inset
+
+S
+\begin_inset Quotes erd
+\end_inset
+
+ in every noun phrase where 
+\begin_inset Quotes eld
+\end_inset
+
+CS
+\begin_inset Quotes erd
+\end_inset
+
+ is a separate word!
+\end_layout
+
+\begin_layout Standard
+If we drop the lemmatizer however, it appears that the word frequency would
+ decrease by a lot.
+ This raises a very interesting question: instead of using the NLTK's lemmatizer
+, should we code one up ourselves, one that can intelligently deal with
+ very specific edge cases like this?
+\end_layout
+
 \begin_layout Section
-Summary and Future Work
+Conclusion
+\end_layout
+
+\begin_layout Subsection
+Project Goals Revisited
+\end_layout
+
+\begin_layout Standard
+Beside the two Project Goals mentioned in Section 1.1, I originally wrote
+ in my project proposal two more goals.
+ One of which is to build a system where users can compare and contrast
+ Facebook Search and NLP Search side by side.
+ As mentioned in Section 3.3, that did not happen due to the API limitation.
+\end_layout
+
+\begin_layout Standard
+Facebook's rich features like the number of likes and views naturally make
+ it a great corpus to apply Sentiment Analysis on.
+ I also did not get to this point, mainly because I wanted to focus more
+ on the first two goals instead.
+\end_layout
+
+\begin_layout Standard
+On the other hand, at some point while building the project, I constructed
+ a social graph based on my friend list.
+ I then proceeded to apply a couple of NP-Complete problems, Max Clique
+ and Min Vertex Cover, on the social graph to see the real-world use of
+ such complex algorithms.
+ Readers who are interested are more than welcomed to check out the accompanied
+ IPython Notebook, which includes a small section on analyzing social graphs.
+\end_layout
+
+\begin_layout Standard
+Overall, the first two goals presented in Section 1.1 were met, and I definitely
+ have a much better idea about how to build a very simple search engine
+ using just NLP concepts.
+\end_layout
+
+\begin_layout Subsection
+Challenges
+\end_layout
+
+\begin_layout Standard
+Perhaps the most challenging part of this project was looking through the
+ vast Facebook Graph API documentation and figuring out what I really need
+ to acquire the dataset and start analyzing them.
+ Python was also not officially supported, which makes it a bit harder to
+ translate examples from other languages to Python.
+ Coupled with the fact that the final project is open-ended, it is very
+ easy to get lost in the documentation and fail to figure out which part
+ is relevant to the project goals.
+\end_layout
+
+\begin_layout Standard
+Unfortunately, Facebook Access Token expires every two hours.
+ This makes the entire process more painful than it should be, especially
+ whenever I decided to refresh and rerun the IPython Notebook.
+ While regenerating access token doesn't take too long, it can certainly
+ be the most annoying part of the project.
+\end_layout
+
+\begin_layout Subsection
+Suggestions for Future Work
+\end_layout
+
+\begin_layout Standard
+If this work is continued in the near future, I would suggest the following
+ (in no particular order):
+\end_layout
+
+\begin_layout Itemize
+Try out different TFIDF variants
+\begin_inset CommandInset citation
+LatexCommand cite
+key "IRbook"
+
+\end_inset
+
+ (maximum TF normalization, sublinear scaling) and determine if it performs
+ better than the vanilla TFIDF algorithm
+\end_layout
+
+\begin_layout Itemize
+As mentioned in Section 3.5, document's length seems to greatly affect the
+ similarity score.
+ Is there a coefficient that we could scale by that would make the document's
+ length less sensitive to the final output?
+\end_layout
+
+\begin_layout Itemize
+For the Topics Extraction part, is there a better way to identify potential
+ noises (like 
+\begin_inset Quotes eld
+\end_inset
+
+http
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes eld
+\end_inset
+
+facebook
+\begin_inset Quotes erd
+\end_inset
+
+, etc.) without having to hardcode them? How would we determine which words
+ tell us more about the popular topics currently being discusses than those
+ who don't? Is there some way we can take the context into account? For
+ example, a Markov Chain which lookup on the previous words could certainly
+ help to determine whether the noun phrase extracted is in a meaningful
+ sentence, or is it in a trolled post made by a sarcastic Facebook user?
+\end_layout
+
+\begin_layout Itemize
+Finally, as discussed in Section 4.4, it would be a nice improvement to build
+ a more robust lemmatizer that would be more sensitive to very specific
+ edge cases, which could potentially mess up the meaning of many words (as
+ seen in the 
+\begin_inset Quotes eld
+\end_inset
+
+CS
+\begin_inset Quotes erd
+\end_inset
+
+ to 
+\begin_inset Quotes eld
+\end_inset
+
+C
+\begin_inset Quotes erd
+\end_inset
+
+ example)
+\end_layout
+
+\begin_layout Subsection
+Summary and Takeaways
+\end_layout
+
+\begin_layout Itemize
+The search result was good, but the algorithm is very sensitive to document's
+ length.
+ The query term is usually very short, whereas a typical Facebook post would
+ have more than a few words
+\end_layout
+
+\begin_layout Itemize
+For topics extraction, the majority of popular topics seem very consistent
+ with what are being most discussed on Facebook, even in the appearance
+ of noises
+\end_layout
+
+\begin_layout Itemize
+It was certainly a very fun and rewarding project, and once again, 
+\begin_inset Quotes eld
+\end_inset
+
+nothing comes close to the excitement from working with live data that one
+ sees everyday.
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Newpage pagebreak
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard

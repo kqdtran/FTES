@@ -91,9 +91,6 @@ stemmer = nltk.stem.porter.PorterStemmer()
 table = string.maketrans("", "")
 sw = stopwords.words('english')
 
-# Spelling corrector
-spell_dict = enchant.Dict('en')
-
 # <markdowncell>
 
 # ## Helper functions for pretty printing, converting text to ascii, etc.
@@ -141,37 +138,49 @@ def stem(word):
     '''
     return stemmer.stem_word(word)
 
-def correct(word, max_dist=2):
-    '''
-    Corrects spelling of a word. If the word is already correct,  cannot be corrected at all,
-    or the edit distance is greater than 2, just returns the input word
-    
-    If it can be corrected, finds a list of suggestions and 
-    returns the first result whose edit distance doesn't exceed a threshold
-    
-    Edit distance: https://en.wikipedia.org/wiki/Edit_distance
-    '''
-    if spell_dict.check(word):
-        return word
-    
-    suggestions = spell_dict.suggest(word)
-    if suggestions and edit_distance(word, suggestions[0]) <= max_dist:
-        return suggestions[0]
-    return word
-
 # <markdowncell>
 
-# ### Some tiny examples for error correction
+# ### Spelling correction
+# (from Peter Norvig famous blog post http://norvig.com/spell-correct.html)   
+# 
+# This was tested out, but the final result below does not involve spelling correction since the final search result score seems to decrease.
 
 # <codecell>
 
-# Works
-print correct('aninal')
-print correct('behols'), '\n'
+import re, collections
 
-# Doesn't work... very well
-print correct('aisplane') # airplane
-print spell_dict.suggest('aisplane')
+def words(text): return re.findall('[a-z]+', text.lower()) 
+
+def train(features):
+    model = collections.defaultdict(lambda: 1)
+    for f in features:
+        model[f] += 1
+    return model
+
+NWORDS = train(words(file('big.txt').read()))
+
+alphabet = 'abcdefghijklmnopqrstuvwxyz'
+
+def edits1(word):
+   splits     = [(word[:i], word[i:]) for i in range(len(word) + 1)]
+   deletes    = [a + b[1:] for a, b in splits if b]
+   transposes = [a + b[1] + b[0] + b[2:] for a, b in splits if len(b)>1]
+   replaces   = [a + c + b[1:] for a, b in splits for c in alphabet if b]
+   inserts    = [a + c + b     for a, b in splits for c in alphabet]
+   return set(deletes + transposes + replaces + inserts)
+
+def known_edits2(word):
+    return set(e2 for e1 in edits1(word) for e2 in edits1(e1) if e2 in NWORDS)
+
+def known(words): return set(w for w in words if w in NWORDS)
+
+def correct(word):
+    candidates = known([word]) or known(edits1(word)) or known_edits2(word) or [word]
+    return max(candidates, key=NWORDS.get)
+
+# <codecell>
+
+correct('sheesh')
 
 # <markdowncell>
 
@@ -428,7 +437,8 @@ def extract_feed(feed):
     for post, link in feed:
         noun_phrases = extract_noun_phrases(post)
         for np in noun_phrases:
-            topics[np] += 1
+            if np != '':
+                topics[np] += 1
     return topics
 
 # <codecell>
@@ -449,23 +459,45 @@ def get_tag_counts(counter):
     '''
     return sorted(dict(counter).iteritems(), key=itemgetter(1), reverse=True)
     
-def create_cloud(counter):
+def create_cloud(counter, filename):
     '''
     Creates a word cloud from a counter
     '''
     tags = make_tags(get_tag_counts(counter)[:80], maxsize=120, 
                      colors=COLOR_SCHEMES['goldfish'])
-    create_tag_image(tags, './img/cloud_large.png', 
+    create_tag_image(tags, './img/' + filename + '.png', 
                      size=(900, 600), background=(0, 0, 0, 255), 
                      layout=LAYOUT_HORIZONTAL, fontname='Lobster')
 
 # <codecell>
 
-create_cloud(c)
+create_cloud(c, 'cloud_large')
 
 # <markdowncell>
 
 # ![](files/img/cloud_large.png)
+
+# <markdowncell>
+
+# ###Filtering out noises and see what we've got! 
+
+# <codecell>
+
+for word in ["http", "www", "facebook"]:
+    topics[word] = 0
+
+# <codecell>
+
+c = Counter(topics)
+c.most_common(20)
+
+# <codecell>
+
+create_cloud(c, 'cloud_large_1')
+
+# <markdowncell>
+
+# ![](files/img/cloud_large_1.png)
 
 # <markdowncell>
 
@@ -607,7 +639,7 @@ print min_cover
 # 
 # * Graph API documentation
 # * FB Access Token expires every two hours...
-# * Sooooo much more to do...
+# * Very open-ended... easy to get lost in the documentation
 
 # <markdowncell>
 
