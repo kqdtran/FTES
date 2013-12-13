@@ -8,6 +8,7 @@
 \usepackage{ulem}
 \usepackage{listings}\usepackage{url}\usepackage{parskip}
 \usepackage [numbers]{natbib}
+\usepackage[english]{babel}
 \end_preamble
 \use_default_options false
 \maintain_unincluded_children false
@@ -71,7 +72,19 @@ Facebook Topics Extraction System (FTES)
 \end_layout
 
 \begin_layout Author
-Khoa Tran - INFO 256 Fall 2013
+Khoa Tran 
+\family typewriter
+
+\begin_inset Newline newline
+\end_inset
+
+khoatran@berkeley.edu
+\family default
+
+\begin_inset Newline newline
+\end_inset
+
+ INFO 256 Fall 2013
 \end_layout
 
 \begin_layout Standard
@@ -198,18 +211,136 @@ API Usage, Dataset, and External Dependencies
 \end_layout
 
 \begin_layout Subsection
-API Usage
+Access Token and API Usage
 \end_layout
 
 \begin_layout Standard
-Facebook Search API
-\begin_inset CommandInset citation
-LatexCommand cite
-key "FBGroupAPI"
+To connect to Facebook and acquire the feeds data, the first step is to
+ generate a Facebook Access Token
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+url{https://developers.facebook.com/tools/explorer}
+\end_layout
 
 \end_inset
 
 
+\end_layout
+
+\end_inset
+
+.
+ Most Facebook applications will have this generated on the fly whenever
+ a user logins to the application, which allows it to acquire the user's
+ data.
+ The biggest downside of Facebook Access Token is that it expires every
+ two hours, so it is very important to locally cache the data.
+\end_layout
+
+\begin_layout Standard
+Facebook API offers many different services, ranging from querying data
+ from individual profile to Ads and Facebook Chat integration.
+ However, it is quite cumbersome to connect to Facebook the traditional
+ way by sending a GET request since there are a lot of different URLs with
+ different parameters to remember.
+ To that end, the unofficial Facebook SDK for Python is born to make this
+ process easier.
+ It's suprisingly easy to retrieve a list of one's friends using just two
+ lines of code:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+graph = facebook.GraphAPI(ACCESS_TOKEN)
+\end_layout
+
+\begin_layout Plain Layout
+
+friends = graph.get_connections("me", "friends")
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+get_connections
+\family default
+ is a very special function because it allows one to easily retrieve any
+ connection between two different 
+\begin_inset Quotes eld
+\end_inset
+
+Facebook objects
+\begin_inset Quotes erd
+\end_inset
+
+.
+ More information can be found on the Python Facebook SDK
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+url{http://facebook-python-library.docs-library.appspot.com/facebook-python/library
+-manual.html}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+, as well as the official Graph API documentation
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+url{https://developers.facebook.com/docs/reference/apis/}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+.
+ In the next subsection, we will see how to acquire the dataset using this
+ very method.
 \end_layout
 
 \begin_layout Subsection
@@ -218,12 +349,331 @@ Dataset
 
 \begin_layout Standard
 The corpus used in this project came from the UC Berkeley Computer Science
- Facebook group, which was last updated on Thursday, December 12, at 11am
+ Facebook group, which was last updated on Thursday, December 12, at 5pm
  PST.
+ To acquire the group's feed, we use the 
+\family typewriter
+get_connections
+\family default
+ method as followed:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+graph.get_connections(id, 'feed')
+\end_layout
+
+\end_inset
+
+, where 
+\family typewriter
+graph
+\family default
+ is the Facebook graph from Section 2.1.
+ How would one find out a Facebook group ID?
+\end_layout
+
+\begin_layout Standard
+It turns out that Facebook offers no easy way to achieve this.
+ One option would be to click on 'View Page Source' and look for the group
+ ID.
+ Since the source code of a Facebook page is huge, this approach is much
+ like looking for a needle in a haystack.
+ In this project, I use a third-party service to get the Facebook Group
+ ID
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+url{http://wallflux.com/facebook_id/}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Once the group ID is found, the function call above would return the data
+ containing Facebook posts in JSON format.
+ The data is then cleaned up using several different methods, including
+ converting from Unicode to ASCII, dropping newline ('
+\family typewriter
+
+\backslash
+n
+\family default
+') and carriage ('
+\family typewriter
+
+\backslash
+r
+\family default
+') characters, etc.
+ to make the data more processable.
 \end_layout
 
 \begin_layout Subsection
 External Dependencies
+\end_layout
+
+\begin_layout Standard
+One of the thing that makes Python a great language for Data Mining and
+ Natural Language Processing is its rich number of powerful, yet simple,
+ packages and libraries.
+ Apart from the Python Facebook SDK, the non-exhaustive list below contains
+ some important packages used in this project:
+\end_layout
+
+\begin_layout Standard
+Connecting to Facebook:
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+requests
+\family default
+ is a powerful library for making RESTful requests.
+ Born to simplify the complexity in built-in modules like 
+\family typewriter
+urllib
+\family default
+ or 
+\family typewriter
+urllib2
+\family default
+, 
+\family typewriter
+requests
+\family default
+ is quicky becoming the de facto way of making web requests in Python applicatio
+ns
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+json
+\family default
+ and 
+\family typewriter
+simplejson
+\family default
+ are used to convert back and forth between JSON data and Python's dictionary,
+ as well as printing multi-level nested data in a nicely indented format
+\end_layout
+
+\begin_layout Standard
+Numerical Computing and Plotting:
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+numpy
+\family default
+ and 
+\family typewriter
+matplotlib
+\family default
+ are the standard way for any numerical computation and plotting in Python
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+networkx
+\family default
+, a package built on top of matplotlib, is used to visualize the connections
+ in a Facebook social graph
+\end_layout
+
+\begin_layout Standard
+Natural Language Processing:
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+nltk
+\family default
+ - with 12 years of experience since its first release in 2001, there's
+ no deny that the Natural Language Toolkit is the best friend of any Natural
+ Language researchers working with Python
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+pattern
+\family default
+ is a web mining module developed by CLiPS, the Computational Linguistics
+ and Psycholinguistics Research Center.
+ Beside web mining, 
+\family typewriter
+pattern
+\family default
+ comes equipped with modules for database, web search, vectorized computation,
+ and graphing
+\end_layout
+
+\begin_layout Standard
+Last but not least, the entire project was built inside an IPython Notebook.
+ As Professor Philip Guo said, 
+\begin_inset Quotes eld
+\end_inset
+
+everything related to my analysis is located in one unified place
+\begin_inset Quotes erd
+\end_inset
+
+
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+url{http://www.pgbovine.net/ipython-notebook-first-impressions.htm}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+, thanks to the IPython Notebook.
+ This simplifies a lot of things as I don't have to maintain a separate
+ presentation for the final project demonstration, and I can document every
+ step along the way right on the notebook, which helps a lot when I come
+ back and type up this final report.
+\end_layout
+
+\begin_layout Subsection
+Viewing the Demo and Reproducing the Result
+\end_layout
+
+\begin_layout Standard
+The Python code is generated using IPython Notebook's automatic code generation,
+ which often includes more extraneous comments than a standard Python file.
+ The best way to view the code without installing any dependency is to use
+ 
+\family typewriter
+nbviewer
+\family default
+
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+url{http://nbviewer.ipython.org/}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+, a static IPython Notebook viewer.
+ The entire notebook, which includes all code, documentation, and relevant
+ images, can be found at 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+url{http://bit.ly/19Fzr5p}
+\end_layout
+
+\end_inset
+
+.
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+
+The unshortened link is 
+\lang english
+
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+url{http://nbviewer.ipython.org/github/kqdtran/FTES/blob/master/ftes.ipynb}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+To reproduce the project in a development environment, a file called 
+\family typewriter
+requirements.txt
+\family default
+ is included.
+ By running 
+\family typewriter
+pip install -r requirements.txt
+\family default
+, all external packages and dependencies will be installed.
+ It is best to execute this command in a virtual machine or a separate 
+\family typewriter
+virtualenv
+\family default
+ environment to avoid any potential conflicts.
+\end_layout
+
+\begin_layout Standard
+The project was developed in Ubuntu 12.10.
+ Please do not hesitate to contact the author for any questions regarding
+ the project and how to reproduce the result.
 \end_layout
 
 \begin_layout Section
