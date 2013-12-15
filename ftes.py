@@ -36,16 +36,12 @@
 
 # <markdowncell>
 
-# ![](files/img/fb_search_1.png)
-
-# <markdowncell>
-
 # # Connects to Facebook    
 # Login to your Facebook account and go to https://developers.facebook.com/tools/explorer/ to obtain and set permissions for an access token.
 
 # <codecell>
 
-ACCESS_TOKEN = 'CAACEdEose0cBAP1vPpXuaZBu35f6fJqCI4ZCZBUEaiZA8ZAMgwALdqiUt4EkzHwMgvBuJNF5BtZBv2AuZAkzEbye66xTxwJHJLnEfKYXAUZCYWj5btIb8rxHdGIVfT5pv6ZBoMygLyOVDYSBgrMsFHy8P3bV7JH2o5Fie2SDZClmjIMLVp3oPd1OSU7ZCp1VCxxV0OL71ZCVTeOhGAZDZD'
+ACCESS_TOKEN = ''
 SEARCH_LIMIT = 500  # facebook allows 500 max
 
 # <markdowncell>
@@ -76,7 +72,6 @@ import string
 import nltk
 from nltk.corpus import stopwords
 import tagger as tag
-import enchant
 from nltk.metrics import edit_distance
 from pattern.vector import Document, Model, TFIDF, LEMMA, KMEANS, HIERARCHICAL, COSINE
 
@@ -141,7 +136,7 @@ def stem(word):
 # <markdowncell>
 
 # ### Spelling correction
-# (from Peter Norvig famous blog post http://norvig.com/spell-correct.html)   
+# (from Peter Norvig's famous blog post http://norvig.com/spell-correct.html)   
 # 
 # This was tested out, but the final result below does not involve spelling correction since the final search result score seems to decrease.
 
@@ -177,10 +172,6 @@ def known(words): return set(w for w in words if w in NWORDS)
 def correct(word):
     candidates = known([word]) or known(edits1(word)) or known_edits2(word) or [word]
     return max(candidates, key=NWORDS.get)
-
-# <codecell>
-
-correct('sheesh')
 
 # <markdowncell>
 
@@ -350,6 +341,8 @@ print process_similarity(sim)
 
 # <codecell>
 
+# Adapted and modified from https://gist.github.com/alexbowe/879414
+
 sentence_re = r'''(?x)      # set flag to allow verbose regexps
       ([A-Z])(\.[A-Z])+\.?  # abbreviations, e.g. U.S.A.
     | \w+(-\w+)*            # words with optional internal hyphens
@@ -370,7 +363,7 @@ grammar = r"""
         {<NBAR><IN><NBAR>}"""
 chunker = nltk.RegexpParser(grammar)
 
-# POS tagger
+# POS tagger - see tagger.py
 tagger = tag.tagger()
 
 def leaves(tree):
@@ -479,7 +472,7 @@ create_cloud(c, 'cloud_large')
 
 # <markdowncell>
 
-# ###Filtering out noises and see what we've got! 
+# ###Filtering out noises and see what we get! 
 
 # <codecell>
 
@@ -501,145 +494,11 @@ create_cloud(c, 'cloud_large_1')
 
 # <markdowncell>
 
-# # Part III: Mutual Friendships Analysis
-
-# <markdowncell>
-
-# ##Why?
-# 
-# * Inspired by *Mining the Social Web, 2nd edition*
-# 
-# * Currently taking an algorithm course... should be interesting to try out on real-world graph!
-
-# <codecell>
-
-friends = [ (friend['id'], friend['name'],)
-                for friend in g.get_connections('me', 'friends')['data'] ]
-
-url = 'https://graph.facebook.com/me/mutualfriends/%s?access_token=%s'
-
-mutual_friends = {}
-
-# This loop spawns a separate request for each iteration, so
-# it may take a while.
-for friend_id, friend_name in friends:
-    r = requests.get(url % (friend_id, ACCESS_TOKEN,) )
-    response_data = json.loads(r.content)['data']
-    mutual_friends[friend_name] = [ data['name'] 
-                                    for data in response_data ]
-    
-nxg = nx.Graph()
-[ nxg.add_edge('me', mf) for mf in mutual_friends ]
-[ nxg.add_edge(f1, f2) 
-  for f1 in mutual_friends 
-      for f2 in mutual_friends[f1] ]
-
-nx.draw(nxg)
-
-# <markdowncell>
-
-# # Max Clique
-# 
-# * From Wiki: maximum set of elements where each pair of elements is connected
-# 
-# * What it means in social network: a set of people where everyone knows each other
-
-# <codecell>
-
-# Finding cliques is a hard problem, so this could take a while for large graphs
-# See http://en.wikipedia.org/wiki/NP-complete and 
-# http://en.wikipedia.org/wiki/Clique_problem
-
-# Adapted from Mining the Social Web, 2nd edition
-
-cliques = [c for c in nx.find_cliques(nxg)]
-num_cliques = len(cliques)
-clique_sizes = [len(c) for c in cliques]
-max_clique_size = max(clique_sizes)
-avg_clique_size = sum(clique_sizes) / num_cliques
-
-max_cliques = [c for c in cliques if len(c) == max_clique_size]
-
-num_max_cliques = len(max_cliques)
-
-max_clique_sets = [set(c) for c in max_cliques]
-friends_in_all_max_cliques = list(reduce(lambda x, y: x.intersection(y),
-                                  max_clique_sets))
-#print 'Max cliques:'
-#print json.dumps(max_cliques, indent=1)
-
-# <codecell>
-
-print 'Num cliques:', num_cliques
-print 'Avg clique size:', avg_clique_size
-print 'Max clique size:', max_clique_size
-print 'Num max cliques:', num_max_cliques
-print
-print 'Friends in all max cliques:'
-print json.dumps(friends_in_all_max_cliques, indent=1)
-
-# <markdowncell>
-
-# ## Min Vertex Cover
-
-# <codecell>
-
-'''
-Given an undirected graph `G = (V, E)` and a function w assigning nonnegative
-weights to its vertices, find a minimum weight subset of V such that each edge
-in E is incident to at least one vertex in the subset.
-
-http://en.wikipedia.org/wiki/Vertex_cover
-
-Adapted from Nicholas Mancuso's <nick.mancuso@gmail.com>
-'''
-
-from networkx.utils import *
-
-@not_implemented_for('directed')
-def min_weighted_vertex_cover(graph, weight=None):
-    '''
-    Find an approximate minimum weighted vertex cover of a graph.
-
-    Parameters
-    ----------
-    graph : NetworkX graph (undirected)
-    weight : None or string, optional (default = None)
-        If None, every edge has weight/distance/cost 1. If a string, use this
-        edge attribute as the edge weight. Any edge attribute not present
-        defaults to 1.
-
-    Returns
-    -------
-    min_weighted_cover : set
-      Returns a set of vertices
-
-    '''
-    weight_func = lambda nd: nd.get(weight, 1)
-    cost = dict((n, weight_func(nd)) for n, nd in graph.nodes(data=True))
-
-    # while there are edges uncovered, continue
-    for u, v in graph.edges_iter():
-        # select some uncovered edge
-        min_cost = min([cost[u], cost[v]])
-        cost[u] -= min_cost
-        cost[v] -= min_cost
-
-    return set(u for u in cost if cost[u] == 0)
-
-# <codecell>
-
-min_cover = min_weighted_vertex_cover(nxg)
-print len(min_cover)
-print min_cover
-
-# <markdowncell>
-
 # ## Challenges:
 # 
-# * Graph API documentation
+# * Graph API's not-very-great documentation
 # * FB Access Token expires every two hours...
-# * Very open-ended... easy to get lost in the documentation
+# * FB limits the number of posts to be max 500. This may lead to inaccurate search information, especially when there are for sure more than 500 posts in the Berkeley CS FB group. Solution => include pagination to fetch everything in the future...
 
 # <markdowncell>
 
@@ -647,19 +506,18 @@ print min_cover
 # 
 # Part I:
 # 
-# * Tried out at least 5 different queries with the simple TFIDF search, and the result seems to be on par with FB Search. The ranking, as seen above, is different, however.      
+# * Tried out a few different queries with the simple TFIDF search, and the result seems to be on par with FB Search. The ranking, as seen above, is different, however. More are discussed in the final report.     
 # 
-# * Revisit and try out different algorithms, including stemming, typo correction, variants of TFIDF (maxmimum TF normalization, sublinear scaling, etc.) http://nlp.stanford.edu/IR-book/html/htmledition/variant-tf-idf-functions-1.html
+# * Revisit and try out different algorithms, including stemming, spelling correction, variants of TFIDF (maxmimum TF normalization, sublinear scaling, etc.) http://nlp.stanford.edu/IR-book/html/htmledition/variant-tf-idf-functions-1.html
 # 
 # Part II:
 # 
-# * There are quite some noises ('http', 'www', etc.) and words that don't really tell you anything new ('class', 'course', etc.)    
+# * There are quite some noises ('http', 'www', etc.) and words that don't really tell you anything new ('class', 'course', etc.). Is there a better way to filter them out instead of just hardcoding them?    
+# 
+# * Perhaps we can combine Part I and II together, i.e. filter out the words that appear a lot across the document (high IDF score)?
 # 
 # * The overall result seems consistent with what most CS students usually discuss on FB ('telebears', '61B', etc.)
 # 
-# Part III:
-# 
-# * Mostly to try out different hard problems on a real social graph!
 # 
 # Overall a great project to work on and extend in the future!
 
