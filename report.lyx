@@ -124,7 +124,7 @@ Introduction
 \end_layout
 
 \begin_layout Standard
-Dealing with social network data and extracting information from them is
+Working with social network data and extracting information from them is
  increasingly becoming a major topic in Natural Language Processing and
  Data Mining.
  In recent years, Twitter datastream is used to predict stocks
@@ -658,10 +658,7 @@ url{http://bit.ly/19Fzr5p}
 status collapsed
 
 \begin_layout Plain Layout
-
 The unshortened link is 
-\lang english
-
 \begin_inset ERT
 status open
 
@@ -1218,8 +1215,18 @@ s in it, while an information-rich document includes many nonzero entries,
 \end_layout
 
 \begin_layout Standard
+Another thing that may lead to the discrepancy in result was the amount
+ of data collected.
+ Facebook imposes a limit of 500 posts per request, hence the amount of
+ data used to build this simple search engine depends on these 500.
+ To improve the accuracy, a pagination implementation is necessary, so that
+ the request can span over multiple pages and retrieve more than just 500
+ posts.
+\end_layout
+
+\begin_layout Standard
 While the NLP approach is not a powerhouse search system with different
- ranking metrics like that of Facebook, it certainly performs very well
+ ranking metrics like that of Facebook, it certainly performs fairly well
  just by looking at a post content.
 \end_layout
 
@@ -1257,9 +1264,9 @@ topics extraction
 \end_layout
 
 \begin_layout Standard
-The idea behind this system is to extract keywords from a Facebook post,
- keep track of the frequency, and finally determine the most talked about
- topic.
+The idea behind this system is to identify and extract keywords (noun phrases)
+ from a Facebook post, keep track of the frequency, and finally determine
+ the most talked about topic.
  Once again, we do not take into account other metrics like the number of
  likes; everything is extracted completely based on the raw text.
 \end_layout
@@ -1269,10 +1276,7 @@ Extracting Keywords
 \end_layout
 
 \begin_layout Standard
-At the heart of this system is identifying and extracting noun phrases from
- an input text.
- Before we can identify a noun phrase, a Part of Speech (POS) Tagger is
- necessary.
+Before we can identify a noun phrase, a Part of Speech (POS) Tagger is necessary.
  In this project, a simple backoff POS Tagger was built based on the material
  presented in Chapter 5 of the online NLTK book
 \begin_inset CommandInset citation
@@ -1318,9 +1322,25 @@ url{https://en.wikipedia.org/wiki/Brown_Corpus}
 
 \begin_layout Standard
 With that said, let's move on to the chunker
-\begin_inset CommandInset citation
-LatexCommand cite
-key "Chunker"
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+Chunker adapted from 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+url{https://gist.github.com/alexbowe/879414}
+\end_layout
+
+\end_inset
+
+
+\end_layout
 
 \end_inset
 
@@ -1417,7 +1437,7 @@ NP
 
 \begin_layout Standard
 For every noun phrase extracted from a Facebook post, we add one to its
- frequency count to later on check if it is among the most talked about
+ frequency count to later on check if it is among the most talked-about
  topics.
  The result will be sorted in descending, and can be used as input for many
  visualization software packages.
@@ -1581,16 +1601,6 @@ Facebook's rich features like the number of likes and views naturally make
 \end_layout
 
 \begin_layout Standard
-On the other hand, at some point while building the project, I constructed
- a social graph based on my friend list.
- I then proceeded to apply a couple of NP-Complete problems, Max Clique
- and Min Vertex Cover, on the social graph to see the real-world use of
- such complex algorithms.
- Readers who are interested are more than welcomed to check out the accompanied
- IPython Notebook, which includes a small section on analyzing social graphs.
-\end_layout
-
-\begin_layout Standard
 Overall, the first two goals presented in Section 1.1 were met, and I definitely
  have a much better idea about how to build a very simple search engine
  using just NLP concepts.
@@ -1624,8 +1634,8 @@ Suggestions for Future Work
 \end_layout
 
 \begin_layout Standard
-If this work is continued in the near future, I would suggest the following
- (in no particular order):
+The following items (in no particular order) are some of the improvements
+ that can be made to this project:
 \end_layout
 
 \begin_layout Itemize
@@ -1645,6 +1655,11 @@ As mentioned in Section 3.5, document's length seems to greatly affect the
  similarity score.
  Is there a coefficient that we could scale by that would make the document's
  length less sensitive to the final output?
+\end_layout
+
+\begin_layout Itemize
+Pagination Implementation that allows the request to span over multiple
+ pages of posts, instead of just retrieving the first 500 posts
 \end_layout
 
 \begin_layout Itemize
@@ -1669,8 +1684,8 @@ facebook
  tell us more about the popular topics currently being discusses than those
  who don't? Is there some way we can take the context into account? For
  example, a Markov Chain which lookup on the previous words could certainly
- help to determine whether the noun phrase extracted is in a meaningful
- sentence, or is it in a trolled post made by a sarcastic Facebook user?
+ help to determine whether the noun phrases extracted are in a contributing
+ post?
 \end_layout
 
 \begin_layout Itemize
@@ -1701,10 +1716,8 @@ Summary and Takeaways
 \end_layout
 
 \begin_layout Itemize
-The search result was good, but the algorithm is very sensitive to document's
- length.
- The query term is usually very short, whereas a typical Facebook post would
- have more than a few words
+The search result was fairly accurate compared to Facebook search, but the
+ algorithm tends to favor shorter posts
 \end_layout
 
 \begin_layout Itemize
