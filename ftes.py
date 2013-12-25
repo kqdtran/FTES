@@ -9,6 +9,10 @@
 
 # <markdowncell>
 
+# ### Link to Final Project Report: https://www.dropbox.com/s/53g8z9do5ciy4of/report.pdf
+
+# <markdowncell>
+
 # ## Project Goals:
 # 
 # * Identify popular topics in a given facebook page
